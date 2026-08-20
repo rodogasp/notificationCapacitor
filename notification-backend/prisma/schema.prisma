@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Platform {
+  ANDROID
+}
+
+enum NotificationTargetType {
+  USER
+  DEVICE
+  TOPIC
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  PARTIAL
+  FAILED
+}
+
+enum DeliveryStatus {
+  SUCCESS
+  FAILED
+}
+
+model DeviceToken {
+  id                    String    @id @default(uuid())
+  userId                String
+  token                 String    @unique
+  platform              Platform  @default(ANDROID)
+  deviceId              String?
+  deviceName            String?
+  appVersion            String?
+  notificationsEnabled  Boolean   @default(true)
+  active                Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  lastSeenAt            DateTime  @default(now())
+  invalidatedAt         DateTime?
+  invalidationReason    String?
+
+  deliveries            NotificationDelivery[]
+
+  @@index([userId])
+  @@index([userId, active, notificationsEnabled])
+  @@map("device_tokens")
+}
+
+model Notification {
+  id              String                  @id @default(uuid())
+  requestedBy     String
+  targetType      NotificationTargetType
+  targetValue     String
+  title           String?
+  body            String?
+  data            Json                    @default("{}")
+  status          NotificationStatus      @default(PENDING)
+  successCount    Int                     @default(0)
+  failureCount    Int                     @default(0)
+  idempotencyKey  String?                 @unique
+  requestHash     String?
+  createdAt       DateTime                @default(now())
+  sentAt          DateTime?
+  failureReason   String?
+
+  deliveries      NotificationDelivery[]
+
+  @@index([requestedBy])
+  @@index([targetType, targetValue])
+  @@map("notifications")
+}
+
+model NotificationDelivery {
+  id             String         @id @default(uuid())
+  notificationId String
+  deviceTokenId  String?
+  fcmMessageId   String?
+  status         DeliveryStatus
+  errorCode      String?
+  errorMessage   String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  notification   Notification   @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  deviceToken    DeviceToken?    @relation(fields: [deviceTokenId], references: [id], onDelete: SetNull)
+
+  @@index([notificationId])
+  @@index([deviceTokenId])
+  @@map("notification_deliveries")
+}
