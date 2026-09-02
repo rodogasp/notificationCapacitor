@@ -13,7 +13,9 @@ fileInput?.addEventListener('change', () => {
   mediaUrl = URL.createObjectURL(file);
   player.src = mediaUrl;
   if (selectedFile) selectedFile.textContent = file.name;
-  if (status) status.textContent = 'Media file selected.';
+  if (status) status.textContent = player.canPlayType(file.type || 'video/x-matroska')
+    ? 'Media file selected.'
+    : 'Media file selected, but this browser may not decode MKV audio.';
 });
 
 document.querySelector('#play-audio')?.addEventListener('click', () => {
