@@ -13,3 +13,5 @@ main {
   margin: 20vh auto;
   text-align: center;
 }
+
+button, input { display: block; margin: 12px auto; }
