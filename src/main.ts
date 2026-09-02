@@ -30,6 +30,12 @@ player?.addEventListener('error', () => {
   if (status) status.textContent = 'This WebView cannot decode this media format.';
 });
 
+player?.addEventListener('play', () => {
+  void media.showNotification()
+    .then((result) => { if (status) status.textContent = result.status; })
+    .catch((error) => { if (status) status.textContent = `Notification error: ${String(error)}`; });
+});
+
 function run(method: keyof MediaPlayback) {
   void media[method]().then((result) => { if (status) status.textContent = result.status; }).catch((error) => { if (status) status.textContent = String(error); });
 }
