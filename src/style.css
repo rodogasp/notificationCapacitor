@@ -1,28 +1,15 @@
 :root {
   color: #17202a;
   background: #eef3f7;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: system-ui, sans-serif;
 }
 
-* { box-sizing: border-box; }
-body { margin: 0; }
-main { width: min(900px, calc(100% - 32px)); margin: 24px auto; }
-.panel { background: #fff; border: 1px solid #d6e0e8; border-radius: 10px; padding: 20px; box-shadow: 0 4px 18px #142b3d12; }
-h1 { margin-top: 0; font-size: 1.6rem; }
-.status { padding: 10px 12px; background: #e7f2f8; border-left: 4px solid #1976a8; border-radius: 4px; font-weight: 600; }
-.field { display: grid; gap: 6px; margin: 14px 0; }
-label { font-weight: 600; }
-input, textarea, button, select { font: inherit; }
-input, select { width: 100%; padding: 10px; border: 1px solid #aebdca; border-radius: 5px; }
-input[readonly] { background: #f3f6f8; }
-.actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
-button { padding: 10px 14px; border: 0; border-radius: 5px; background: #1565c0; color: #fff; cursor: pointer; }
-button:hover { background: #0d47a1; }
-button.secondary { background: #546e7a; }
-.help { color: #52616b; font-size: .92rem; }
-.call-settings { margin: 22px 0; padding: 16px; border: 1px solid #d6e0e8; background: #f7fafc; }
-.call-settings h2 { margin: 0 0 8px; font-size: 1.1rem; }
-.toggle-row { display: flex; align-items: center; gap: 8px; margin: 14px 0; cursor: pointer; }
-.toggle-row input { width: auto; }
-textarea { width: 100%; min-height: 320px; resize: vertical; padding: 12px; border: 1px solid #aebdca; border-radius: 5px; background: #101820; color: #d9f2e6; font-family: ui-monospace, monospace; font-size: .84rem; }
-@media (max-width: 560px) { main { width: calc(100% - 20px); margin: 10px auto; } .panel { padding: 14px; } .actions { display: grid; } button { width: 100%; } }
+body {
+  margin: 0;
+}
+
+main {
+  width: min(720px, calc(100% - 32px));
+  margin: 20vh auto;
+  text-align: center;
+}

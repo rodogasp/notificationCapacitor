@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">FCM Test App</string>
-    <string name="title_activity_main">FCM Test App</string>
+    <string name="app_name">Welcome</string>
+    <string name="title_activity_main">Welcome</string>
     <string name="package_name">notification.test</string>
     <string name="custom_url_scheme">notification.test</string>
     <string name="default_notification_channel_id">default_channel</string>

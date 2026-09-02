@@ -3,68 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1565c0" />
-    <title>FCM Test App</title>
+    <title>Welcome</title>
   </head>
   <body>
-    <main>
-      <section class="panel">
-        <h1>FCM Test App</h1>
-        <p id="status" class="status">Starting...</p>
-
-        <div class="field">
-          <label for="backend-url">Backend base URL</label>
-          <input id="backend-url" type="url" placeholder="https://device.example.test" autocomplete="url" />
-          <div class="help">Physical phone: use your computer LAN IP, currently <strong>http://10.4.4.198:3000</strong>. Android emulator: use <strong>http://10.0.2.2:3000</strong>. Do not use localhost.</div>
-        </div>
-        <div class="field">
-          <label for="bearer-token">Optional Bearer token</label>
-          <input id="bearer-token" type="password" placeholder="Paste a test JWT if required" autocomplete="off" />
-          <div class="help">Proof of concept only. Do not use production credentials here; use secure storage in production.</div>
-        </div>
-
-        <div class="actions">
-          <button id="use-test-token" class="secondary">Use Test Token (dev)</button>
-          <button id="initialize">Initialize Notifications</button>
-          <button id="register-token">Register Token With Backend</button>
-          <button id="copy-token">Copy FCM Token</button>
-          <button id="local-test">Send Local Test Notification</button>
-          <button id="clear-logs" class="secondary">Clear Logs</button>
-        </div>
-
-        <section id="call-settings" class="call-settings">
-          <h2>Incoming Call Settings</h2>
-          <div class="field">
-            <label for="call-vibration">Vibration</label>
-            <select id="call-vibration">
-              <option value="off">Off</option>
-              <option value="short">Short</option>
-              <option value="medium">Medium</option>
-              <option value="long">Long</option>
-            </select>
-          </div>
-          <label class="toggle-row" for="call-muted">
-            <input id="call-muted" type="checkbox" />
-            <span>Mute ringtone</span>
-          </label>
-          <div class="actions">
-            <button id="call-pick-ringtone" class="secondary" type="button">Choose Ringtone</button>
-            <button id="call-apply-settings" type="button">Apply Call Settings</button>
-          </div>
-          <p id="call-ringtone-label" class="help">Default ringtone</p>
-        </section>
-
-        <div class="field">
-          <label for="fcm-token">Current FCM registration token</label>
-          <input id="fcm-token" type="text" readonly placeholder="Not registered yet" />
-        </div>
-
-        <div class="field">
-          <label for="logs">Event log</label>
-          <textarea id="logs" readonly aria-label="Timestamped event log"></textarea>
-        </div>
-      </section>
-    </main>
+    <h1>Welcome</h1>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
