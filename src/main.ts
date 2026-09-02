@@ -1,21 +1,13 @@
+import { registerPlugin } from '@capacitor/core';
 import './style.css';
-
-const fileInput = document.querySelector<HTMLInputElement>('#media-file');
-const player = document.querySelector<HTMLVideoElement>('#video-player');
-const selectedFile = document.querySelector<HTMLParagraphElement>('#selected-file');
+interface MediaPlayback { selectMediaFile(): Promise<{ name: string }>; showNotification(): Promise<{ status: string }>; startPlayer(): Promise<{ status: string }>; stopPlayer(): Promise<{ status: string }>; startForegroundService(): Promise<{ status: string }>; stopForegroundService(): Promise<{ status: string }>; }
+const media = registerPlugin<MediaPlayback>('MediaPlayback');
 const status = document.querySelector<HTMLParagraphElement>('#status');
-let mediaUrl: string | undefined;
-
-fileInput?.addEventListener('change', () => {
-  const file = fileInput.files?.[0];
-  if (!file || !player) return;
-  if (mediaUrl) URL.revokeObjectURL(mediaUrl);
-  mediaUrl = URL.createObjectURL(file);
-  player.src = mediaUrl;
-  if (selectedFile) selectedFile.textContent = file.name;
-  if (status) status.textContent = 'Video selected. Use the video controls to play.';
-});
-
-player?.addEventListener('error', () => {
-  if (status) status.textContent = 'This browser cannot decode this video format.';
-});
+const selected = document.querySelector<HTMLParagraphElement>('#selected-file');
+function run(method: keyof Omit<MediaPlayback, 'selectMediaFile'>) { void media[method]().then((result) => { if (status) status.textContent = result.status; }).catch((error) => { if (status) status.textContent = String(error); }); }
+document.querySelector('#media-file')?.addEventListener('click', () => void media.selectMediaFile().then((file) => { if (selected) selected.textContent = file.name; }));
+document.querySelector('#show-notification')?.addEventListener('click', () => run('showNotification'));
+document.querySelector('#play-audio')?.addEventListener('click', () => run('startPlayer'));
+document.querySelector('#stop-audio')?.addEventListener('click', () => run('stopPlayer'));
+document.querySelector('#start-service')?.addEventListener('click', () => run('startForegroundService'));
+document.querySelector('#stop-service')?.addEventListener('click', () => run('stopForegroundService'));
