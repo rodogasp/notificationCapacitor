@@ -1,35 +1,14 @@
+import { registerPlugin } from '@capacitor/core';
 import './style.css';
 
-const fileInput = document.querySelector<HTMLInputElement>('#media-file');
-const player = document.querySelector<HTMLAudioElement>('#audio-player');
-const selectedFile = document.querySelector<HTMLParagraphElement>('#selected-file');
+interface MediaPlayback { selectMediaFile(): Promise<{ name: string }>; showNotification(): Promise<{ status: string }>; startPlayer(): Promise<{ status: string }>; stopPlayer(): Promise<{ status: string }>; startForegroundService(): Promise<{ status: string }>; stopForegroundService(): Promise<{ status: string }>; }
+const media = registerPlugin<MediaPlayback>('MediaPlayback');
 const status = document.querySelector<HTMLParagraphElement>('#status');
-let mediaUrl: string | undefined;
-
-fileInput?.addEventListener('change', () => {
-  const file = fileInput.files?.[0];
-  if (!file || !player) return;
-  if (mediaUrl) URL.revokeObjectURL(mediaUrl);
-  mediaUrl = URL.createObjectURL(file);
-  player.src = mediaUrl;
-  if (selectedFile) selectedFile.textContent = file.name;
-  if (status) status.textContent = player.canPlayType(file.type || 'video/x-matroska')
-    ? 'Media file selected.'
-    : 'Media file selected, but this browser may not decode MKV audio.';
-});
-
-document.querySelector('#play-audio')?.addEventListener('click', () => {
-  if (!player?.src) {
-    if (status) status.textContent = 'Select an audio file first.';
-    return;
-  }
-  void player.play();
-  if (status) status.textContent = 'Playing.';
-});
-
-document.querySelector('#stop-audio')?.addEventListener('click', () => {
-  if (!player) return;
-  player.pause();
-  player.currentTime = 0;
-  if (status) status.textContent = 'Stopped.';
-});
+const selected = document.querySelector<HTMLParagraphElement>('#selected-file');
+function run(method: keyof MediaPlayback) { void media[method]().then(result => { if (status && 'status' in result) status.textContent = result.status; }).catch(error => { if (status) status.textContent = String(error); }); }
+document.querySelector('#media-file')?.addEventListener('click', () => void media.selectMediaFile().then(file => { if (selected) selected.textContent = file.name; }));
+document.querySelector('#show-notification')?.addEventListener('click', () => run('showNotification'));
+document.querySelector('#play-audio')?.addEventListener('click', () => run('startPlayer'));
+document.querySelector('#stop-audio')?.addEventListener('click', () => run('stopPlayer'));
+document.querySelector('#start-service')?.addEventListener('click', () => run('startForegroundService'));
+document.querySelector('#stop-service')?.addEventListener('click', () => run('stopForegroundService'));
