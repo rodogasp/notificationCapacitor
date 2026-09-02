@@ -1,36 +1,33 @@
 import './style.css';
 
-import { registerPlugin } from '@capacitor/core';
-
-interface MediaPlaybackPlugin {
-	showNotification(): Promise<{ status: string }>;
-	startPlayer(): Promise<{ status: string }>;
-	stopPlayer(): Promise<{ status: string }>;
-	startForegroundService(): Promise<{ status: string }>;
-	stopForegroundService(): Promise<{ status: string }>;
-	selectMediaFile(): Promise<{ name: string; uri: string }>;
-}
-
-const mediaPlayback = registerPlugin<MediaPlaybackPlugin>('MediaPlayback');
-const status = document.querySelector<HTMLParagraphElement>('#status');
+const fileInput = document.querySelector<HTMLInputElement>('#media-file');
+const player = document.querySelector<HTMLAudioElement>('#audio-player');
 const selectedFile = document.querySelector<HTMLParagraphElement>('#selected-file');
+const status = document.querySelector<HTMLParagraphElement>('#status');
+let mediaUrl: string | undefined;
 
-function report(action: Promise<{ status: string }>) {
-	void action.then((result) => {
-		if (status) status.textContent = result.status;
-	}).catch((error: unknown) => {
-		if (status) status.textContent = error instanceof Error ? error.message : String(error);
-	});
-}
-
-document.querySelector<HTMLInputElement>('#media-file')?.addEventListener('change', () => {
-	report(mediaPlayback.selectMediaFile().then((file) => {
-		if (selectedFile) selectedFile.textContent = file.name;
-		return { status: `Selected ${file.name}` };
-	}));
+fileInput?.addEventListener('change', () => {
+  const file = fileInput.files?.[0];
+  if (!file || !player) return;
+  if (mediaUrl) URL.revokeObjectURL(mediaUrl);
+  mediaUrl = URL.createObjectURL(file);
+  player.src = mediaUrl;
+  if (selectedFile) selectedFile.textContent = file.name;
+  if (status) status.textContent = 'Media file selected.';
 });
-document.querySelector('#show-notification')?.addEventListener('click', () => report(mediaPlayback.showNotification()));
-document.querySelector('#play-audio')?.addEventListener('click', () => report(mediaPlayback.startPlayer()));
-document.querySelector('#stop-audio')?.addEventListener('click', () => report(mediaPlayback.stopPlayer()));
-document.querySelector('#start-service')?.addEventListener('click', () => report(mediaPlayback.startForegroundService()));
-document.querySelector('#stop-service')?.addEventListener('click', () => report(mediaPlayback.stopForegroundService()));
+
+document.querySelector('#play-audio')?.addEventListener('click', () => {
+  if (!player?.src) {
+    if (status) status.textContent = 'Select an audio file first.';
+    return;
+  }
+  void player.play();
+  if (status) status.textContent = 'Playing.';
+});
+
+document.querySelector('#stop-audio')?.addEventListener('click', () => {
+  if (!player) return;
+  player.pause();
+  player.currentTime = 0;
+  if (status) status.textContent = 'Stopped.';
+});

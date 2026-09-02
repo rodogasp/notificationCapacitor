@@ -11,11 +11,9 @@
       <p>Background audio playback test application.</p>
       <input id="media-file" type="file" accept="audio/*" />
       <p id="selected-file">No media file selected.</p>
-      <button id="show-notification">Display Notification</button>
       <button id="play-audio">Play Audio</button>
       <button id="stop-audio">Stop Audio</button>
-      <button id="start-service">Start Foreground Service</button>
-      <button id="stop-service">Stop Foreground Service</button>
+      <audio id="audio-player" controls></audio>
       <p id="status" role="status"></p>
     </main>
     <script type="module" src="/src/main.ts"></script>
