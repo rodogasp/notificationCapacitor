@@ -14,6 +14,7 @@
   "keywords": [],
   "author": "",
   "dependencies": {
+    "@capacitor/app": "5.0.8",
     "@capacitor/core": "5.7.8"
   },
   "devDependencies": {

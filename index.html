@@ -8,15 +8,13 @@
   <body>
     <main>
       <h1>Welcome</h1>
-      <p>Select media to play audio in the background.</p>
-      <input id="media-file" type="file" accept="video/*,audio/*,.mkv,video/x-matroska,application/octet-stream" />
+      <p>WebView audio and foreground-service experiment.</p>
+      <input id="media-file" type="file" accept="audio/*,.mkv,video/x-matroska" />
       <p id="selected-file">No media file selected.</p>
-      <video id="video-player" controls playsinline></video>
-      <button id="show-notification">Display Media Notification</button>
-      <button id="play-audio">Play Audio</button>
-      <button id="stop-audio">Stop Audio</button>
+      <audio id="audio-player" controls></audio>
       <button id="start-service">Start Foreground Service</button>
       <button id="stop-service">Stop Foreground Service</button>
+      <p>Keepalive logs are available through Android logcat.</p>
       <p id="status" role="status"></p>
     </main>
     <script type="module" src="/src/main.ts"></script>

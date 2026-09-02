@@ -1,13 +1,55 @@
 package notification.test;
-import android.app.*; import android.content.*; import android.os.*; import android.util.Log; import androidx.annotation.Nullable; import androidx.core.app.NotificationCompat; import androidx.media3.common.*; import androidx.media3.exoplayer.ExoPlayer; import androidx.media3.session.MediaSession;
+
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Intent;
+import android.os.Build;
+import android.os.IBinder;
+import android.util.Log;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+
 public final class MediaPlaybackService extends Service {
- static final String PLAY="notification.test.PLAY",STOP="notification.test.STOP",START="notification.test.START",STOP_SERVICE="notification.test.STOP_SERVICE",SHOW="notification.test.SHOW"; private static final String CHANNEL="media_playback"; private ExoPlayer player; private MediaSession session; private static String uri;
- public static void setUri(String value){uri=value;}
- @Override public void onCreate(){super.onCreate(); Log.i("MediaPlaybackService","created"); if(Build.VERSION.SDK_INT>=26)((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(new NotificationChannel(CHANNEL,"Background audio playback",NotificationManager.IMPORTANCE_LOW)); player=new ExoPlayer.Builder(this).build(); player.addListener(new Player.Listener(){@Override public void onIsPlayingChanged(boolean playing){Log.i("MediaPlaybackService",playing?"playback started":"playback stopped");update();}}); session=new MediaSession.Builder(this,player).build();}
- @Override public int onStartCommand(Intent intent,int flags,int id){String action=intent==null?null:intent.getAction();Log.i("MediaPlaybackService","action="+action);if(STOP_SERVICE.equals(action)){stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();return START_NOT_STICKY;}if(PLAY.equals(action))play();if(STOP.equals(action))player.stop();startForeground(41,notification());return START_STICKY;}
- private void play(){if(uri==null)return;if(player.getMediaItemCount()==0){player.setMediaItem(MediaItem.fromUri(uri));player.prepare();}player.play();}
- private PendingIntent command(String action){return PendingIntent.getService(this,action.hashCode(),new Intent(this,MediaPlaybackService.class).setAction(action),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);}
- private Notification notification(){return new NotificationCompat.Builder(this,CHANNEL).setSmallIcon(android.R.drawable.ic_media_play).setContentTitle("Background audio playback").setContentText(player!=null&&player.isPlaying()?"Playing - foreground service active":"Foreground service active").setOngoing(true).setOnlyAlertOnce(true).addAction(android.R.drawable.ic_media_play,"Start Player",command(PLAY)).addAction(android.R.drawable.ic_media_pause,"Stop Player",command(STOP)).addAction(android.R.drawable.ic_media_play,"Start Foreground Service",command(START)).addAction(android.R.drawable.ic_menu_close_clear_cancel,"Stop Foreground Service",command(STOP_SERVICE)).setStyle(new androidx.media.app.NotificationCompat.MediaStyle().setMediaSession(session.getSessionCompatToken())).build();}
- private void update(){((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).notify(41,notification());}
- @Override public void onDestroy(){Log.i("MediaPlaybackService","destroyed");session.release();player.release();super.onDestroy();}@Nullable @Override public IBinder onBind(Intent intent){return null;}
+    static final String START = "notification.test.START";
+    static final String STOP_SERVICE = "notification.test.STOP_SERVICE";
+    private static final String CHANNEL = "foreground_test";
+    private static final int NOTIFICATION_ID = 41;
+
+    @Override public void onCreate() {
+        super.onCreate();
+        Log.i("MediaPlaybackService", "foreground service created");
+        if (Build.VERSION.SDK_INT >= 26) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL, "Foreground service test", NotificationManager.IMPORTANCE_LOW);
+            ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).createNotificationChannel(channel);
+        }
+    }
+
+    @Override public int onStartCommand(Intent intent, int flags, int startId) {
+        String action = intent == null ? null : intent.getAction();
+        Log.i("MediaPlaybackService", "foreground service action=" + action);
+        if (STOP_SERVICE.equals(action)) {
+            stopForeground(STOP_FOREGROUND_REMOVE);
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+        startForeground(NOTIFICATION_ID, notification());
+        return START_STICKY;
+    }
+
+    private Notification notification() {
+        PendingIntent stop = PendingIntent.getService(this, 1, new Intent(this, MediaPlaybackService.class).setAction(STOP_SERVICE), PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        return new NotificationCompat.Builder(this, CHANNEL)
+            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setContentTitle("Foreground service test")
+            .setContentText("Service active; WebView audio is independent")
+            .setOngoing(true)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop Service", stop)
+            .build();
+    }
+
+    @Override public void onDestroy() { Log.i("MediaPlaybackService", "foreground service destroyed"); super.onDestroy(); }
+    @Nullable @Override public IBinder onBind(Intent intent) { return null; }
 }

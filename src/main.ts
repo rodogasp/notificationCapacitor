@@ -1,31 +1,34 @@
+import { App } from '@capacitor/app';
 import { registerPlugin } from '@capacitor/core';
 import './style.css';
 
-interface MediaPlayback {
-  selectMediaFile(): Promise<{ name: string }>;
-  showNotification(): Promise<{ status: string }>;
-  startPlayer(): Promise<{ status: string }>;
-  stopPlayer(): Promise<{ status: string }>;
-  startForegroundService(): Promise<{ status: string }>;
-  stopForegroundService(): Promise<{ status: string }>;
-}
-
-const media = registerPlugin<MediaPlayback>('MediaPlayback');
+interface ForegroundService { startForegroundService(): Promise<{ status: string }>; stopForegroundService(): Promise<{ status: string }>; }
+const service = registerPlugin<ForegroundService>('MediaPlayback');
+const fileInput = document.querySelector<HTMLInputElement>('#media-file');
+const audio = document.querySelector<HTMLAudioElement>('#audio-player');
 const selected = document.querySelector<HTMLParagraphElement>('#selected-file');
 const status = document.querySelector<HTMLParagraphElement>('#status');
+let mediaUrl: string | undefined;
 
-function run(method: keyof Omit<MediaPlayback, 'selectMediaFile'>) {
-  void media[method]().then((result) => { if (status) status.textContent = result.status; }).catch((error) => { if (status) status.textContent = String(error); });
-}
+App.addListener('pause', () => { console.log('[APP] pause'); });
+App.addListener('resume', () => { console.log('[APP] resume'); });
+setInterval(() => { console.log('[KEEPALIVE]', new Date().toISOString()); }, 1000);
 
-document.querySelector('#media-file')?.addEventListener('click', () => {
-  void media.selectMediaFile().then((file) => {
-    if (selected) selected.textContent = file.name;
-    if (status) status.textContent = 'Media selected. Start the foreground service, then play.';
-  }).catch((error) => { if (status) status.textContent = String(error); });
+fileInput?.addEventListener('change', () => {
+  const file = fileInput.files?.[0];
+  if (!file || !audio) return;
+  if (mediaUrl) URL.revokeObjectURL(mediaUrl);
+  mediaUrl = URL.createObjectURL(file);
+  audio.src = mediaUrl;
+  if (selected) selected.textContent = file.name;
+  if (status) status.textContent = 'Audio selected. Use the browser audio controls.';
 });
-document.querySelector('#show-notification')?.addEventListener('click', () => run('showNotification'));
-document.querySelector('#play-audio')?.addEventListener('click', () => run('startPlayer'));
-document.querySelector('#stop-audio')?.addEventListener('click', () => run('stopPlayer'));
+audio?.addEventListener('play', () => console.log('[AUDIO] play'));
+audio?.addEventListener('pause', () => console.log('[AUDIO] pause'));
+audio?.addEventListener('error', () => { if (status) status.textContent = 'Browser cannot decode this file.'; });
+
+function run(action: 'startForegroundService' | 'stopForegroundService') {
+  void service[action]().then((result) => { if (status) status.textContent = result.status; }).catch((error) => { if (status) status.textContent = String(error); });
+}
 document.querySelector('#start-service')?.addEventListener('click', () => run('startForegroundService'));
 document.querySelector('#stop-service')?.addEventListener('click', () => run('stopForegroundService'));
