@@ -5,11 +5,15 @@ const fileInput = document.querySelector<HTMLInputElement>('#media-file');
 const audio = document.querySelector<HTMLAudioElement>('#audio-player');
 const selected = document.querySelector<HTMLParagraphElement>('#selected-file');
 const status = document.querySelector<HTMLParagraphElement>('#status');
-const service = registerPlugin<{ startForegroundService(): Promise<{ status: string }>; stopForegroundService(): Promise<{ status: string }> }>('ForegroundTest');
+const service = registerPlugin<{ showNotification(): Promise<{ status: string }>; startForegroundService(): Promise<{ status: string }>; stopForegroundService(): Promise<{ status: string }>; addListener(eventName: string, listener: (event: { action: string }) => void): Promise<{ remove(): Promise<void> }> }>('ForegroundTest');
 let mediaUrl: string | undefined;
 
 App.addListener('pause', () => { console.log('[APP] pause'); });
 App.addListener('resume', () => { console.log('[APP] resume'); });
+service.addListener('browserCommand', (event: { action: string }) => {
+  if (event.action === 'notification.test.PLAY') void audio?.play();
+  if (event.action === 'notification.test.PAUSE' && audio) audio.pause();
+});
 setInterval(() => { console.log('[KEEPALIVE]', new Date().toISOString()); }, 1000);
 
 fileInput?.addEventListener('change', () => {
@@ -23,6 +27,7 @@ fileInput?.addEventListener('change', () => {
 });
 audio?.addEventListener('play', () => console.log('[AUDIO] play'));
 audio?.addEventListener('pause', () => console.log('[AUDIO] pause'));
+audio?.addEventListener('play', () => { void service.showNotification(); });
 audio?.addEventListener('error', () => console.error('[AUDIO] decode error'));
 
 function run(action: 'startForegroundService' | 'stopForegroundService') {
