@@ -14,7 +14,12 @@ public final class ForegroundTestPlugin extends Plugin {
     private final BroadcastReceiver browserCommands = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) { notifyListeners("browserCommand", new JSObject().put("action", intent.getStringExtra("action"))); }
     };
-    @Override public void load() { super.load(); getContext().registerReceiver(browserCommands, new IntentFilter(ForegroundTestService.BROWSER_COMMAND)); }
+    @Override public void load() {
+        super.load();
+        IntentFilter filter = new IntentFilter(ForegroundTestService.BROWSER_COMMAND);
+        if (Build.VERSION.SDK_INT >= 33) getContext().registerReceiver(browserCommands, filter, Context.RECEIVER_NOT_EXPORTED);
+        else getContext().registerReceiver(browserCommands, filter);
+    }
     @Override protected void handleOnDestroy() { getContext().unregisterReceiver(browserCommands); super.handleOnDestroy(); }
     @PluginMethod public void showNotification(PluginCall call) { send(call, null); }
     @PluginMethod public void startForegroundService(PluginCall call) { send(call, null); }
