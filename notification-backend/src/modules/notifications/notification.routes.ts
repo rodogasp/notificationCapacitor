@@ -24,4 +24,5 @@ notificationRouter.use(authenticate, requireNotificationRole);
 notificationRouter.post('/users/:userId', notificationController.sendToUser);
 notificationRouter.post('/devices', notificationController.sendToDevice);
 notificationRouter.post('/topics/:topic', notificationController.sendToTopic);
+notificationRouter.get('/', notificationController.list);
 notificationRouter.get('/:notificationId', notificationController.getNotification);

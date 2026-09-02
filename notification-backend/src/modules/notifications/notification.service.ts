@@ -198,6 +198,10 @@ export class NotificationService {
     return notification;
   }
 
+  async listNotifications(limit: number): Promise<Notification[]> {
+    return this.notificationRepository.listRecent(limit);
+  }
+
   private async persistDeliveriesAndDeactivateInvalidTokens(
     notificationId: string,
     results: Array<{

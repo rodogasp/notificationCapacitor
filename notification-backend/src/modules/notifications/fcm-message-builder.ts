@@ -13,7 +13,7 @@ export function buildAndroidMessageContent(
   data: Record<string, string>;
   android: {
     priority: 'high' | 'normal';
-    notification: { channelId: string; sound: string };
+    notification?: { channelId: string; sound: string };
     ttl?: number;
     collapseKey?: string;
   };
@@ -32,10 +32,15 @@ export function buildAndroidMessageContent(
     data,
     android: {
       priority,
-      notification: {
-        channelId,
-        sound: 'default',
-      },
+      // An Android notification block turns a message into a system-display
+      // notification. Omit it for data-only messages so the app's FCM service
+      // receives incoming-call data while backgrounded or on the lock screen.
+      notification: notification
+        ? {
+            channelId,
+            sound: 'default',
+          }
+        : undefined,
       ttl: input.androidTtlSeconds !== undefined ? input.androidTtlSeconds * 1000 : undefined,
       collapseKey: input.androidCollapseKey,
     },

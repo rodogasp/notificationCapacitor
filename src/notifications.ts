@@ -1,16 +1,17 @@
 import { Capacitor } from '@capacitor/core';
-import { LocalNotifications } from '@capacitor/local-notifications';
+import { LocalNotifications, type Channel } from '@capacitor/local-notifications';
 import {
   PushNotifications,
   type PushNotificationSchema,
   type Token,
 } from '@capacitor/push-notifications';
 import { APP_CONFIG } from './config';
-import type { LogWriter } from './logger';
+import { CallNotificationSettings } from './call-notification-settings';
+import type { AppLogger } from './logger';
 
 export interface NotificationController {
-  initialize(onToken: (token: string) => void, log: LogWriter): Promise<boolean>;
-  sendLocalTest(log: LogWriter): Promise<void>;
+  initialize(onToken: (token: string) => void, log: AppLogger): Promise<boolean>;
+  sendLocalTest(log: AppLogger): Promise<void>;
 }
 
 let listenersInstalled = false;
@@ -27,114 +28,120 @@ function notificationId(): number {
   return Math.floor(Date.now() % 2147483000) || 1;
 }
 
-function readable(value: unknown): string {
-  return JSON.stringify(value, null, 2);
-}
-
 export function createNotificationController(): NotificationController {
   return {
     async initialize(onToken, log) {
+      log.info('=== FCM initialization started ===');
+      log.debug('Platform info', {
+        platform: Capacitor.getPlatform(),
+        isNativePlatform: Capacitor.isNativePlatform(),
+        userAgent: navigator.userAgent,
+      });
+
       if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') {
-        log('Native Android Capacitor app is required for FCM registration.');
+        log.warn('Native Android Capacitor app is required for FCM registration. Aborting.');
         return false;
       }
+
       try {
+        const t0 = performance.now();
+
         const pushPermission = await PushNotifications.checkPermissions();
-        log(`Notification permission status: ${pushPermission.receive}`);
+        log.debug('Push permission check result', pushPermission);
         const requestedPushPermission = pushPermission.receive === 'prompt'
           ? await PushNotifications.requestPermissions()
           : pushPermission;
-        log(`Push permission result: ${requestedPushPermission.receive}`);
+        log.info(`Push permission: ${requestedPushPermission.receive}`);
         if (requestedPushPermission.receive !== 'granted') {
-          log('Push permission denied. Initialization stopped.');
+          log.warn('Push permission denied. Initialization stopped.', requestedPushPermission);
           return false;
         }
 
         const localPermission = await LocalNotifications.checkPermissions();
-        log(`Local notification permission status: ${localPermission.display}`);
+        log.debug('Local notification permission check result', localPermission);
         const requestedLocalPermission = localPermission.display === 'prompt'
           ? await LocalNotifications.requestPermissions()
           : localPermission;
-        log(`Local notification permission result: ${requestedLocalPermission.display}`);
+        log.info(`Local notification permission: ${requestedLocalPermission.display}`);
         if (requestedLocalPermission.display !== 'granted') {
-          log('Local notification permission denied.');
+          log.warn('Local notification permission denied.', requestedLocalPermission);
           return false;
         }
 
-        await LocalNotifications.createChannel({
+        const channelConfig: Channel = {
           id: APP_CONFIG.channelId,
           name: APP_CONFIG.channelName,
           description: 'FCM test notifications',
           importance: 5,
           visibility: 1,
           sound: 'default',
-        });
-        log(`Android notification channel ready: ${APP_CONFIG.channelId}`);
+        };
+        log.debug('Creating Android notification channel', channelConfig);
+        await LocalNotifications.createChannel(channelConfig);
+        log.info(`Android notification channel ready: ${APP_CONFIG.channelId}`);
 
         if (!listenersInstalled) {
+          log.debug('Installing push/local notification listeners...');
           listenerHandles = await Promise.all([
             PushNotifications.addListener('registration', (token: Token) => {
-              log('FCM token received.');
+              log.info(`FCM registration event received (token length ${token.value.length})`);
+              log.debug('FCM token prefix/suffix', {
+                prefix: token.value.slice(0, 8),
+                suffix: token.value.slice(-6),
+              });
               onToken(token.value);
             }),
             PushNotifications.addListener('registrationError', (error) => {
-              log(`Registration error: ${readable(error)}`);
+              log.error('FCM registration error event', error);
             }),
             PushNotifications.addListener('pushNotificationReceived', async (push) => {
-              const { title, body } = notificationText(push);
-              log(`Foreground FCM message received: ${readable(push)}`);
-              log(`Push notification title: ${title}`);
-              log(`Push notification body: ${body}`);
-              log(`Push notification data: ${readable(push.data || {})}`);
-              try {
-                await LocalNotifications.schedule({
-                  notifications: [{
-                    id: notificationId(),
-                    title,
-                    body,
-                    extra: push.data || {},
-                    channelId: APP_CONFIG.channelId,
-                    schedule: { at: new Date(Date.now() + 50) },
-                  }],
-                });
-                log('Local notification scheduled for foreground FCM message.');
-              } catch (error) {
-                log(`Local notification scheduling error: ${String(error)}`);
-              }
+              log.info('Foreground push notification received');
+              log.debug('Full push payload (foreground)', push);
+              log.debug('Push data payload', push.data || {});
+              // Display is fully owned by the native MyFirebaseMessagingService (full-screen
+              // CallStyle notification), which fires for this same message. Scheduling a second,
+              // plain LocalNotifications entry here would show a duplicate/conflicting notification.
             }),
             PushNotifications.addListener('pushNotificationActionPerformed', (event) => {
-              log(`Notification clicked: ${readable(event)}`);
+              log.info('Notification tapped/action performed');
+              log.debug('Full notification action event', event);
             }),
           ]);
           listenersInstalled = true;
-          log('Push notification listeners installed.');
+          log.info('Push notification listeners installed.', {
+            listenerCount: listenerHandles.length,
+          });
         } else {
-          log('Push notification listeners already installed.');
+          log.debug('Push notification listeners were already installed; skipping re-install.');
         }
 
-        log('Push registration started.');
+        log.info('Calling PushNotifications.register()...');
+        log.info('Deleting the previous FCM token before registration...');
+        await CallNotificationSettings.deleteFcmToken();
         await PushNotifications.register();
+        const elapsedMs = Math.round(performance.now() - t0);
+        log.info(`=== FCM initialization completed in ${elapsedMs}ms ===`);
         return true;
       } catch (error) {
-        log(`Notification initialization error: ${String(error)}`);
+        log.error('Notification initialization error', error);
         return false;
       }
     },
 
     async sendLocalTest(log) {
+      log.info('Scheduling local test notification (no network involved)...');
       try {
-        await LocalNotifications.schedule({
-          notifications: [{
-            id: notificationId(),
-            title: 'Local test',
-            body: 'Local notifications are working.',
-            channelId: APP_CONFIG.channelId,
-            schedule: { at: new Date(Date.now() + 50) },
-          }],
-        });
-        log('Local test notification scheduled. This did not contact Firebase or the backend.');
+        const scheduled = {
+          id: notificationId(),
+          title: 'Local test',
+          body: 'Local notifications are working.',
+          channelId: APP_CONFIG.channelId,
+          schedule: { at: new Date(Date.now() + 50) },
+        };
+        await LocalNotifications.schedule({ notifications: [scheduled] });
+        log.info('Local test notification scheduled.', { id: scheduled.id });
       } catch (error) {
-        log(`Local test notification error: ${String(error)}`);
+        log.error('Local test notification error', error);
       }
     },
   };

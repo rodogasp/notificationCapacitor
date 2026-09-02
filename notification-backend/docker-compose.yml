@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -13,7 +11,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-notification_user}']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-notification_user} -d ${POSTGRES_DB:-notification_db}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,12 +20,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # Match the host user so a mode-0600 local service-account file stays private.
+    user: "${DOCKER_UID:-1001}:${DOCKER_GID:-1001}"
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-development}
       HOST: 0.0.0.0
       PORT: 3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-notification_user}:${POSTGRES_PASSWORD:-notification_pass}@postgres:5432/${POSTGRES_DB:-notification_db}?schema=public
@@ -35,7 +35,7 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CREDENTIALS_MODE: ${FIREBASE_CREDENTIALS_MODE:-adc}
-      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/firebase-service-account.json
       FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON:-}
       FCM_ANDROID_CHANNEL_ID: ${FCM_ANDROID_CHANNEL_ID:-default_channel}
       # Safe out-of-the-box local defaults; override in .env for real deployments.

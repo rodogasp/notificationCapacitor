@@ -98,4 +98,11 @@ export class NotificationRepository {
       include: { deliveries: true },
     });
   }
+
+  async listRecent(limit: number): Promise<Notification[]> {
+    return this.prisma.notification.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
 }

@@ -85,7 +85,7 @@ so a queue-backed implementation can be swapped in later without touching
 
 1. Go to the [Firebase console](https://console.firebase.google.com/) and create/select a project.
 2. Add an Android app to the project (package name must match your Android app's `applicationId`).
-3. Download `google-services.json` and add it to the Android app (not to this backend).
+3. Download `google-services.json` and add it to the Android app (not to backend).
 
 ## 4. How to enable FCM
 
@@ -273,6 +273,11 @@ curl -X POST http://localhost:3000/api/v1/notifications/topics/news-updates \
 **Retrieve a notification result**
 ```bash
 curl http://localhost:3000/api/v1/notifications/NOTIFICATION_UUID -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+**List recent notifications** (see everything the server has sent/attempted)
+```bash
+curl "http://localhost:3000/api/v1/notifications?limit=50" -H "Authorization: Bearer $ADMIN_TOKEN"
 ```
 
 **Health / readiness**

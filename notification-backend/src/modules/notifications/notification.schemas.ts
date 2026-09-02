@@ -75,3 +75,7 @@ export const topicParamSchema = z.object({
 export const notificationIdParamSchema = z.object({
   notificationId: z.string().uuid('notificationId must be a valid UUID'),
 });
+
+export const listNotificationsQuerySchema = z.object({
+  limit: z.coerce.number().int().positive().max(200).optional().default(50),
+});

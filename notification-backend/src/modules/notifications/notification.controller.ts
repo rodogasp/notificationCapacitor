@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { asyncHandler } from '../../middleware/error-handler';
 import type { NotificationService } from './notification.service';
 import {
+  listNotificationsQuerySchema,
   notificationIdParamSchema,
   sendMessageBodySchema,
   sendToDeviceBodySchema,
@@ -105,6 +106,28 @@ export class NotificationController {
         errorCode: delivery.errorCode,
         errorMessage: delivery.errorMessage,
         createdAt: delivery.createdAt,
+      })),
+    });
+  });
+
+  list = asyncHandler(async (req: Request, res: Response, _next: NextFunction) => {
+    const { limit } = listNotificationsQuerySchema.parse(req.query);
+    const notifications = await this.notificationService.listNotifications(limit);
+
+    res.status(200).json({
+      notifications: notifications.map((notification) => ({
+        id: notification.id,
+        requestedBy: notification.requestedBy,
+        targetType: notification.targetType,
+        targetValue: notification.targetValue,
+        title: notification.title,
+        body: notification.body,
+        status: notification.status,
+        successCount: notification.successCount,
+        failureCount: notification.failureCount,
+        createdAt: notification.createdAt,
+        sentAt: notification.sentAt,
+        failureReason: notification.failureReason,
       })),
     });
   });

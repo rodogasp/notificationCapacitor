@@ -3,6 +3,7 @@ import { env } from './config/env';
 import { logger } from './config/logger';
 import { initializeFirebase } from './config/firebase';
 import { prisma, disconnectDatabase } from './config/database';
+import { attachWebSocketServer, closeWebSocketServer } from './websocket-server';
 
 async function main(): Promise<void> {
   initializeFirebase();
@@ -11,6 +12,7 @@ async function main(): Promise<void> {
   const server = app.listen(env.PORT, env.HOST, () => {
     logger.info({ host: env.HOST, port: env.PORT }, 'Notification backend listening');
   });
+  const websocketServer = attachWebSocketServer(server);
 
   let shuttingDown = false;
   const shutdown = (signal: string): void => {
@@ -18,7 +20,8 @@ async function main(): Promise<void> {
     shuttingDown = true;
     logger.info({ signal }, 'Received shutdown signal, closing gracefully');
 
-    server.close(async (closeError) => {
+    closeWebSocketServer(websocketServer).then(() => {
+      server.close(async (closeError) => {
       if (closeError) {
         logger.error({ err: closeError.message }, 'Error while closing HTTP server');
       }
@@ -32,6 +35,7 @@ async function main(): Promise<void> {
       } finally {
         process.exit(closeError ? 1 : 0);
       }
+      });
     });
 
     // Safety net in case connections never drain.
