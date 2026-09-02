@@ -8,14 +8,10 @@
   <body>
     <main>
       <h1>Welcome</h1>
-      <p>WebView audio and foreground-service experiment.</p>
+      <p>WebView audio player.</p>
       <input id="media-file" type="file" accept="audio/*,.mkv,video/x-matroska" />
       <p id="selected-file">No media file selected.</p>
       <audio id="audio-player" controls></audio>
-      <button id="start-service">Start Foreground Service</button>
-      <button id="stop-service">Stop Foreground Service</button>
-      <p>Keepalive logs are available through Android logcat.</p>
-      <p id="status" role="status"></p>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
