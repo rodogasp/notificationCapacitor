@@ -4,15 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Welcome</title>
-    <script type="module" crossorigin src="/assets/index-D6ODhH4j.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-9AUjCd1U.css">
+    <script type="module" crossorigin src="/assets/index-DR6SlevQ.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CWzGcbEI.css">
   </head>
   <body>
     <main>
       <h1>Welcome</h1>
       <p>Select media to play audio in the background.</p>
-      <button id="media-file">Select Media</button>
+      <input id="media-file" type="file" accept="video/*,audio/*,.mkv,video/x-matroska,application/octet-stream" />
       <p id="selected-file">No media file selected.</p>
+      <video id="video-player" controls playsinline></video>
       <button id="show-notification">Display Media Notification</button>
       <button id="play-audio">Play Audio</button>
       <button id="stop-audio">Stop Audio</button>

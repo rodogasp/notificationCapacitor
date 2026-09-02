@@ -9,5 +9,5 @@ body {
 }
 
 main { width: min(900px, calc(100% - 32px)); margin: 10vh auto; text-align: center; }
-input { margin: 12px auto; }
+input, button { margin: 12px auto; }
 video { display: block; width: 100%; max-height: 70vh; background: #111; }
