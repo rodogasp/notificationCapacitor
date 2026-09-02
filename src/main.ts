@@ -1,8 +1,11 @@
 import { App } from '@capacitor/app';
+import { registerPlugin } from '@capacitor/core';
 import './style.css';
 const fileInput = document.querySelector<HTMLInputElement>('#media-file');
 const audio = document.querySelector<HTMLAudioElement>('#audio-player');
 const selected = document.querySelector<HTMLParagraphElement>('#selected-file');
+const status = document.querySelector<HTMLParagraphElement>('#status');
+const service = registerPlugin<{ startForegroundService(): Promise<{ status: string }>; stopForegroundService(): Promise<{ status: string }> }>('ForegroundTest');
 let mediaUrl: string | undefined;
 
 App.addListener('pause', () => { console.log('[APP] pause'); });
@@ -21,3 +24,9 @@ fileInput?.addEventListener('change', () => {
 audio?.addEventListener('play', () => console.log('[AUDIO] play'));
 audio?.addEventListener('pause', () => console.log('[AUDIO] pause'));
 audio?.addEventListener('error', () => console.error('[AUDIO] decode error'));
+
+function run(action: 'startForegroundService' | 'stopForegroundService') {
+  void service[action]().then((result) => { if (status) status.textContent = result.status; });
+}
+document.querySelector('#start-service')?.addEventListener('click', () => run('startForegroundService'));
+document.querySelector('#stop-service')?.addEventListener('click', () => run('stopForegroundService'));
